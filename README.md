@@ -1,5 +1,5 @@
 Utilizo esse espaço para deixar guardado e mostrar meu progresso enquanto estou na faculdade!
-no momento estudando me aprofundando em JAVA e em breve SQL(Banco de dados).
+no momento me aprofundando em JAVA e em breve SQL(Banco de dados).
 
 
 
