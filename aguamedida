@@ -1,0 +1,143 @@
+import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+
+class Domicilio {
+    int hab; //Não utilizado
+    //<Data do registro, Consumo registrado> Esse Map registrara um máximo de 90 dias
+    private final HashMap<LocalDate, Float> consumoHist = new HashMap<>(90, 1.0f);
+    float medDiaria;
+    float conTotal;
+    float metaDiaria;
+    LocalDate dataMaisAntiga;
+
+    public Domicilio(int hab){
+        this.hab = hab;
+    }
+
+    /*public HashMap<LocalDate, Float> acessaRegistro(){
+        return consumoHist;
+    }*/
+    public float value(LocalDate data)          {return consumoHist.get(data);}
+    public int size()                           {return consumoHist.size();}
+    public boolean containsKey(LocalDate data)  {return consumoHist.containsKey(data);}
+
+    public void novoRegistro(LocalDate data, float consumo){
+        if (consumoHist.size() >= 90){
+            conTotal -= consumoHist.get(dataMaisAntiga);
+            consumoHist.remove(dataMaisAntiga);
+            dataMaisAntiga = dataMaisAntiga.plusDays(1);
+        }
+        consumoHist.put(data, consumo/hab);
+        conTotal += consumoHist.get(data);
+        medDiaria = conTotal / consumoHist.size();
+    }
+
+    public void printConsumo(){
+        consumoHist.forEach((key, value)
+                -> System.out.println(
+                    "Data: " + key.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) +
+                    "\nConsumo " + value
+            )
+        );
+    }
+}
+
+public class AguaNaMedida {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Quantas pessoas na casa: ");
+        int hab = scanner.nextInt();
+
+        Domicilio dom = new Domicilio(hab);
+
+        if (dom.size() == 0){
+            System.out.print("Qual foi o consumo hoje: ");
+            float valor = scanner.nextFloat();
+            dom.novoRegistro(LocalDate.now(), valor);
+        }
+        //Se essa é a primeira entrada, a data de hoje é salva na variável dataMaisAntiga
+        if (dom.size() == 1){
+            dom.dataMaisAntiga = LocalDate.now();
+        }
+        float mediaPadrao = 0.1f;
+
+
+        System.out.println("=== Água na Medida ===");
+
+        while (true) {
+            System.out.println("\n1. Definir meta diária (m³)");
+            System.out.println("2. Registrar leitura do hidrômetro");
+            System.out.println("3. Ver histórico de consumo");
+            System.out.println("4. Ver consumo total");
+            System.out.println("5. Sair");
+            System.out.print("Escolha uma opção: ");
+            int opcao = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcao) {
+                case 1:
+                    System.out.print("Informe a Meta Diária diária de consumo (m³): ");
+                    dom.metaDiaria = scanner.nextFloat();
+                    System.out.println("Meta definida com sucesso!");
+                    break;
+
+                case 2:
+                    LocalDate data = LocalDate.now();
+
+                    if (dom.containsKey(data))
+                    {
+                        System.out.println("A leitura de hoje já existe!");
+                        System.out.print("Modo de teste: Forçar nova data? (s/n) ");
+                        if (scanner.hasNext("s"))
+                        {
+                            scanner.nextLine();
+                            for(; data.isBefore(LocalDate.now().plusDays(90));
+                                data = data.plusDays(1))
+                            {
+                                if (!dom.containsKey(data)){
+                                    System.out.print("Data: " + data.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + "\nQual é o consumo? ");
+                                    dom.novoRegistro(data, scanner.nextFloat());
+                                    System.out.println("Leitura registrada para " + data.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                                    break;
+                                }
+                            }
+                        }
+                    }else {
+                        System.out.print("Informe a leitura do hidrômetro (m³): ");
+                        dom.novoRegistro(LocalDate.now(), scanner.nextFloat());
+                        System.out.println("Leitura registrada para " + data.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    }
+                    break;
+
+                case 3:
+                    System.out.println("\n=== Histórico de Consumo ===");
+                    dom.printConsumo();
+                    break;
+
+                case 4:
+                    System.out.printf("Consumo total registrado: %.2f m³\n", dom.conTotal);
+                    if (dom.metaDiaria > 0) {
+                        System.out.printf("Média diária: %.2f m³\n", dom.medDiaria);
+                        if (dom.medDiaria <= dom.metaDiaria) {
+                            System.out.println("✅ Dentro da metaDiaria!");
+                        } else {
+                            System.out.println("⚠️ Acima da metaDiaria!");
+                        }
+                    }
+                    break;
+
+                case 5:
+                    System.out.println("Encerrando programa...");
+                    System.exit(0);
+                    break;
+
+                default:
+                    System.err.println("Opção inválida.");
+                    break;
+            }
+        }
+    }
+}
